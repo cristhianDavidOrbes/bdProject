@@ -73,9 +73,62 @@ public class ActorRepository implements Repository<Actor> {
 
     @Override
     public void save(Actor t) {
+        int id = t.getActorID();
+        String sql = "SELECT * FROM sakila.actor WHERE actor_id = ?";
+    
+        try (
+            PreparedStatement stmt = conn.prepareStatement(sql);
+        ) {
+            stmt.setInt(1, id);
+            ResultSet rs = stmt.executeQuery();
+    
+            if (rs.next()) {
+ 
+                String updateSql = "UPDATE sakila.actor SET first_name = ?, last_name = ? WHERE actor_id = ?";
+                try (PreparedStatement updateStmt = conn.prepareStatement(updateSql)) {
+                    updateStmt.setString(1, t.getFirstName());
+                    updateStmt.setString(2, t.getLastName());
+                    updateStmt.setInt(3, id);
+                    updateStmt.executeUpdate();
+                    System.out.println("Actor actualizado.");
+                }
+
+            } else {
+                String insertSql = "INSERT INTO sakila.actor (actor_id, first_name, last_name) VALUES (?, ?, ?)";
+                try (PreparedStatement insertStmt = conn.prepareStatement(insertSql)) {
+                    insertStmt.setInt(1, id);
+                    insertStmt.setString(2, t.getFirstName());
+                    insertStmt.setString(3, t.getLastName());
+                    insertStmt.executeUpdate();
+                    System.out.println("Actor insertado.");
+                }
+            }
+    
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
+    
 
     @Override
     public void delete(Integer id) {
+        String sql = "DELETE FROM sakila.actor WHERE actor_id = ?";
+    
+        try (
+            PreparedStatement stmt = conn.prepareStatement(sql);
+        ) {
+            stmt.setInt(1, id);
+            int rowsAffected = stmt.executeUpdate();
+    
+            if (rowsAffected > 0) {
+                System.out.println("Actor eliminado correctamente.");
+            } else {
+                System.out.println("No se encontró un actor con ese ID.");
+            }
+    
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
+    
 }
